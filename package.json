@@ -3,20 +3,11 @@
   "version": "1.0.0",
   "description": "Gen Baazar — Complete Agricultural Marketplace (₹ / INR)",
   "scripts": {
-    "build": "npm --prefix client run build",
     "server": "npm --prefix server start",
     "client": "npm --prefix client dev",
     "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['--prefix', 'server', 'start'], { stdio: 'inherit', shell: true }); spawn('npm', ['--prefix', 'client', 'dev'], { stdio: 'inherit', shell: true });\"",
+    "build": "npm --prefix client run build",
     "test": "npm --prefix server test"
-  },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^18.0.9",
-    "express": "^5.3.0",
-    "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.11.4",
-    "multer": "^2.5.0"
   },
   "keywords": [
     "agriculture",
