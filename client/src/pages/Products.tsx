@@ -577,15 +577,15 @@ export const Products: React.FC = () => {
                     </div>
                     <Badge
                       variant={
-                        order.status === 'delivered'
+                        order.orderStatus === 'delivered'
                           ? 'green'
-                          : order.status === 'cancelled'
+                          : order.orderStatus === 'cancelled'
                           ? 'red'
                           : 'amber'
                       }
                       size="sm"
                     >
-                      {order.status.toUpperCase()}
+                      {order.orderStatus.toUpperCase()}
                     </Badge>
                   </div>
 
