@@ -1,0 +1,24 @@
+{
+  "name": "gen-baazar",
+  "version": "1.0.0",
+  "description": "Gen Baazar — Complete Agricultural Marketplace (₹ / INR)",
+  "scripts": {
+    "server": "npm --prefix server start",
+    "client": "npm --prefix client dev",
+    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['--prefix', 'server', 'start'], { stdio: 'inherit', shell: true }); spawn('npm', ['--prefix', 'client', 'dev'], { stdio: 'inherit', shell: true });\"",
+    "build": "npm --prefix client run build",
+    "test": "npm --prefix server test"
+  },
+  "keywords": [
+    "agriculture",
+    "marketplace",
+    "farmers",
+    "machinery-rental",
+    "agri-transport",
+    "inr",
+    "tamil-nadu"
+  ],
+  "author": "Gen Baazar Team",
+  "license": "ISC"
+}
+
