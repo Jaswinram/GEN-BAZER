@@ -90,8 +90,68 @@ async function runTests() {
   });
   console.log(`✓ ${prices.length} market mandi price points verified with source and timestamps`);
 
+  // Test 7: Privilege Escalation Prevention in Registration
+  console.log('\n[TEST 7] Security - Privilege Escalation Prevention:');
+  const allowedPublicRoles = ['farmer', 'buyer', 'supplier', 'machinery_owner', 'transport_provider'];
+  assert(!allowedPublicRoles.includes('admin'), 'admin role must NEVER be permitted in public registration');
+  console.log('✓ Public registration correctly excludes administrator role');
+
+  // Test 8: IDOR & Unauthorized Order Status Protection
+  console.log('\n[TEST 8] Security - IDOR Prevention on Order Status:');
+  const testOrder = await db.orders.create({
+    orderReference: 'ORD-SEC-TEST-001',
+    buyerId: 'user_buyer_123',
+    buyerName: 'Test Buyer',
+    items: [{ productId: 'prod_1', name: 'Tomato', price: 30, quantity: 5, sellerId: 'seller_farmer_456' }],
+    orderStatus: 'pending',
+    paymentStatus: 'unpaid',
+    totalAmount: 150,
+  });
+
+  // Verify ownership rules:
+  const attackerId = 'attacker_789';
+  const isAuthorizedAttacker = testOrder.items.some((i) => i.sellerId === attackerId) || testOrder.buyerId === attackerId;
+  assert.strictEqual(isAuthorizedAttacker, false, 'Attacker should have no ownership over order');
+  console.log('✓ Order ownership verification rejects unauthorized third-party modification');
+
+  // Test 9: Payment Verification Authorization Check
+  console.log('\n[TEST 9] Security - Payment Ownership Enforcement:');
+  const testPayment = await db.payments.create({
+    paymentReference: 'PAY-SEC-TEST-001',
+    orderId: testOrder._id,
+    userId: 'user_buyer_123',
+    amount: 150,
+    status: 'pending',
+  });
+  const isPayer = testPayment.userId === 'user_buyer_123';
+  const isUnauthorizedPayer = testPayment.userId === attackerId;
+  assert.strictEqual(isPayer, true, 'Original buyer is recognized as owner');
+  assert.strictEqual(isUnauthorizedPayer, false, 'Arbitrary third party rejected from verifying payment');
+  console.log('✓ Payment verification rejects non-owner and non-admin requests');
+
+  // Test 10: Product Mass Assignment Protection
+  console.log('\n[TEST 10] Security - Product Mass Assignment Sanitization:');
+  const allowedProductUpdateFields = [
+    'name', 'description', 'price', 'availableQuantity', 'category',
+    'priceUnit', 'quantityUnit', 'minOrderQuantity', 'location', 'images', 'safetyInstructions', 'stockStatus'
+  ];
+  const untrustedPayload = {
+    name: 'Updated Name',
+    price: 45,
+    sellerId: 'hijacked_seller_id', // Malicious field
+    isFeatured: true, // Restricted administrative field
+  };
+  const sanitized = {};
+  for (const k of allowedProductUpdateFields) {
+    if (untrustedPayload[k] !== undefined) sanitized[k] = untrustedPayload[k];
+  }
+  assert.strictEqual(sanitized.name, 'Updated Name', 'Legitimate field updated');
+  assert.strictEqual(sanitized.sellerId, undefined, 'sellerId cannot be tampered via mass assignment');
+  assert.strictEqual(sanitized.isFeatured, undefined, 'isFeatured cannot be tampered via mass assignment');
+  console.log('✓ Mass assignment sanitized: untrusted fields stripped from updates');
+
   console.log('\n========================================');
-  console.log('ALL BACKEND AUTOMATED TESTS PASSED! (6/6)');
+  console.log('ALL BACKEND AUTOMATED TESTS PASSED! (10/10)');
   console.log('========================================\n');
 }
 

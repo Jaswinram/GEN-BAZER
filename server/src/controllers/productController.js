@@ -216,7 +216,31 @@ const updateProduct = async (req, res, next) => {
       });
     }
 
-    const updated = await db.products.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Whitelist allowed fields to prevent Mass Assignment vulnerability
+    const allowedFields = [
+      'name',
+      'description',
+      'price',
+      'availableQuantity',
+      'category',
+      'priceUnit',
+      'quantityUnit',
+      'minOrderQuantity',
+      'location',
+      'images',
+      'safetyInstructions',
+      'stockStatus',
+    ];
+
+    const sanitizedUpdate = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        sanitizedUpdate[key] = req.body[key];
+      }
+    }
+    sanitizedUpdate.updatedAt = new Date();
+
+    const updated = await db.products.findByIdAndUpdate(req.params.id, sanitizedUpdate, { new: true });
 
     res.status(200).json({
       success: true,

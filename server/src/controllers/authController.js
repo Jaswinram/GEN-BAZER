@@ -29,7 +29,15 @@ const register = async (req, res, next) => {
       });
     }
 
-    const validRoles = ['farmer', 'buyer', 'supplier', 'machinery_owner', 'transport_provider', 'admin'];
+    // Security Check: Public registration must never grant administrator privileges
+    if (role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Administrator account registration is prohibited. Administrator accounts must be provisioned internally.',
+      });
+    }
+
+    const validRoles = ['farmer', 'buyer', 'supplier', 'machinery_owner', 'transport_provider'];
     const assignedRole = validRoles.includes(role) ? role : 'buyer';
 
     const salt = await bcrypt.genSalt(10);

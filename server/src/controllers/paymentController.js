@@ -72,6 +72,16 @@ const verifyPayment = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Payment transaction record not found.' });
     }
 
+    // Ownership Verification (Prevent IDOR / Payment Hijacking)
+    const isOwner = String(payment.userId) === String(req.user._id);
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to verify or modify this transaction.',
+      });
+    }
+
     const order = await db.orders.findById(payment.orderId);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Associated order not found.' });

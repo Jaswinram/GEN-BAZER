@@ -96,6 +96,14 @@ const updateUserStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid status value.' });
     }
 
+    // Prevent administrator self-lockout
+    if (String(req.params.id) === String(req.user._id) && status === 'suspended') {
+      return res.status(400).json({
+        success: false,
+        message: 'Security protection: Administrators cannot suspend their own account.',
+      });
+    }
+
     const updated = await db.users.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!updated) {
       return res.status(404).json({ success: false, message: 'User not found.' });

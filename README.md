@@ -49,18 +49,20 @@ Agricultural products are sold in distinct units per category rather than standa
 
 ---
 
-## 👥 Default Demo Accounts (1-Click Instant Login)
+## 🔒 Security & Roles Overview
 
-All demo accounts come pre-configured in the system. On the `/login` page, you can click any of the **Quick 1-Click Demo Login** buttons:
+Gen Baazar enforces strict server-side Role-Based Access Control (RBAC), Helmet security headers, rate limiting, and parameter validation across all endpoints.
 
-| Role | Email | Password | Name / Description |
-| :--- | :--- | :--- | :--- |
-| **Farmer** | `farmer@genbaazar.com` | `password123` | Murugan Selvam (Coimbatore) |
-| **Merchant / Buyer** | `buyer@genbaazar.com` | `password123` | Anand Kumar Traders (Koyambedu Mandi) |
-| **Agri Supplier** | `supplier@genbaazar.com` | `password123` | Kaveri Agro Supplies (Erode) |
-| **Machinery Owner** | `machinery@genbaazar.com` | `password123` | Karthik Raja (Tiruppur Fleet) |
-| **Transport Provider** | `transport@genbaazar.com` | `password123` | Selvi Agri Logistics (Salem Hub) |
-| **Administrator** | `admin@genbaazar.com` | `admin123` | Platform Admin Console |
+| Role | Access Permissions |
+| :--- | :--- |
+| **Farmer** | List fresh produce, track incoming buyer orders, review mandi prices, book machinery/transport. |
+| **Merchant / Buyer** | Browse marketplace catalog, place produce orders, initiate secure checkout, view delivery status. |
+| **Agri Supplier** | List agricultural inputs (certified seeds, bio-fertilizers, farm tools) with regulatory guidance. |
+| **Machinery Owner** | Manage rental fleet (tractors, harvesters), accept/reject field reservations, track earnings. |
+| **Transport Provider** | Register goods vehicles, accept agricultural freight dispatch requests, manage delivery routes. |
+| **Administrator** | Access protected `/api/admin/*` endpoints and `/admin` console for user moderation and platform oversight. |
+
+> **Security Note:** In production deployments, default credentials must never be committed. Administrator accounts must be initialized via secure environment variables (`ADMIN_EMAIL`, `ADMIN_INITIAL_PASSWORD`) and protected with strong random signing keys (`JWT_SECRET`).
 
 ---
 

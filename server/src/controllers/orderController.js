@@ -214,6 +214,34 @@ const updateOrderStatus = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
+    // Authorization & Ownership Verification (Prevent IDOR)
+    const isAdmin = req.user.role === 'admin';
+    const isSeller = order.items && order.items.some((item) => String(item.sellerId) === String(req.user._id));
+    const isBuyer = String(order.buyerId) === String(req.user._id);
+
+    if (!isAdmin && !isSeller && !isBuyer) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to modify this order.',
+      });
+    }
+
+    // Buyers can only cancel their own order while it is still pending
+    if (isBuyer && !isAdmin && !isSeller) {
+      if (orderStatus !== 'cancelled') {
+        return res.status(403).json({
+          success: false,
+          message: 'Buyers are only permitted to cancel pending orders.',
+        });
+      }
+      if (order.orderStatus !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot cancel order after it has entered "${order.orderStatus}" state. Please contact the seller.`,
+        });
+      }
+    }
+
     const validStatuses = ['pending', 'accepted', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (!validStatuses.includes(orderStatus)) {
       return res.status(400).json({ success: false, message: 'Invalid order status transition.' });
