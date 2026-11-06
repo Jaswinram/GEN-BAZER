@@ -88,6 +88,22 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    moderationStatus: {
+      type: String,
+      enum: ['approved', 'pending_approval', 'rejected'],
+      default: 'approved',
+    },
+    moderationReason: {
+      type: String,
+      default: '',
+    },
+    moderatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    moderatedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

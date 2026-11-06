@@ -2,30 +2,64 @@ const express = require('express');
 const router = express.Router();
 const {
   getPlatformStats,
+  getPlatformAnalytics,
   getAllUsers,
   updateUserStatus,
+  getAllProducts,
+  updateProductStatus,
+  deleteProductByAdmin,
+  getAllMachinery,
+  updateMachineryStatus,
+  deleteMachineryByAdmin,
+  getAllTransport,
+  updateTransportStatus,
+  getAllOrders,
+  getAllBookings,
+  getAllPayments,
+  getPlatformActivity,
   getReports,
   updateReport,
   submitReport,
-  getAllProducts,
-  getAllOrders,
-  getAllMachinery,
-  getAllTransport,
-  getAllPayments,
 } = require('../controllers/adminController');
 const { protect, authorizeRoles } = require('../middleware/auth');
 
-router.get('/stats', protect, authorizeRoles('admin'), getPlatformStats);
-router.get('/users', protect, authorizeRoles('admin'), getAllUsers);
-router.patch('/users/:id/status', protect, authorizeRoles('admin'), updateUserStatus);
-router.get('/products', protect, authorizeRoles('admin'), getAllProducts);
-router.get('/orders', protect, authorizeRoles('admin'), getAllOrders);
-router.get('/machinery', protect, authorizeRoles('admin'), getAllMachinery);
-router.get('/transport', protect, authorizeRoles('admin'), getAllTransport);
-router.get('/payments', protect, authorizeRoles('admin'), getAllPayments);
-router.get('/reports', protect, authorizeRoles('admin'), getReports);
-router.patch('/reports/:id', protect, authorizeRoles('admin'), updateReport);
+// Public/Private user report submission
 router.post('/reports', protect, submitReport);
 
-module.exports = router;
+// All subsequent routes strictly require authenticated administrator credentials
+router.use(protect);
+router.use(authorizeRoles('admin'));
 
+// Core Analytics & Stats
+router.get('/stats', getPlatformStats);
+router.get('/analytics', getPlatformAnalytics);
+router.get('/activity', getPlatformActivity);
+
+// User Management
+router.get('/users', getAllUsers);
+router.patch('/users/:id/status', updateUserStatus);
+
+// Product Management
+router.get('/products', getAllProducts);
+router.patch('/products/:id/status', updateProductStatus);
+router.delete('/products/:id', deleteProductByAdmin);
+
+// Machinery Management
+router.get('/machinery', getAllMachinery);
+router.patch('/machinery/:id/status', updateMachineryStatus);
+router.delete('/machinery/:id', deleteMachineryByAdmin);
+
+// Transport Management
+router.get('/transport', getAllTransport);
+router.patch('/transport/:id/status', updateTransportStatus);
+
+// Orders & Financials
+router.get('/orders', getAllOrders);
+router.get('/bookings', getAllBookings);
+router.get('/payments', getAllPayments);
+
+// Complaints & Moderation
+router.get('/reports', getReports);
+router.patch('/reports/:id', updateReport);
+
+module.exports = router;

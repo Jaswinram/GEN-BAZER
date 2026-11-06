@@ -150,8 +150,38 @@ async function runTests() {
   assert.strictEqual(sanitized.isFeatured, undefined, 'isFeatured cannot be tampered via mass assignment');
   console.log('✓ Mass assignment sanitized: untrusted fields stripped from updates');
 
+  // Test 11: Cryptographic Password Authentication (No Backdoors)
+  console.log('\n[TEST 11] Security - Cryptographic Password Authentication:');
+  const bcrypt = require('bcryptjs');
+  const adminUser = users.find((u) => u.role === 'admin');
+  assert(adminUser, 'Admin user should exist in seed database');
+  const isBcryptMatch = await bcrypt.compare('Gb!Admin#2026_R7vQ9mK2pL', adminUser.password);
+  assert.strictEqual(isBcryptMatch, true, 'Admin password correctly authenticates against bcrypt hash');
+  const isBackdoorRejected = await bcrypt.compare('admin123', adminUser.password);
+  assert.strictEqual(isBackdoorRejected, false, 'Insecure demo password admin123 is rejected by cryptographic hash');
+  console.log('✓ Admin authenticates exclusively via bcrypt hash; legacy backdoors rejected');
+
+  // Test 12: Admin Activity Audit & Analytics
+  console.log('\n[TEST 12] Platform Admin Analytics & Activity Audit Structure:');
+  const ordersList = await db.orders.find();
+  const paymentsList = await db.payments.find();
+  assert(ordersList.length > 0, 'Orders exist for analytics');
+  assert(paymentsList.length > 0, 'Payments exist for financial audits');
+  console.log(`✓ Analytics datasets available: ${ordersList.length} orders, ${paymentsList.length} payment records`);
+
+  // Test 13: Product Moderation Lifecycle
+  console.log('\n[TEST 13] Product Moderation Status & Lifecycle:');
+  const sampleProduct = products[0];
+  const updatedProduct = await db.products.findByIdAndUpdate(
+    sampleProduct._id,
+    { moderationStatus: 'approved', moderatedAt: new Date() },
+    { new: true }
+  );
+  assert.strictEqual(updatedProduct.moderationStatus, 'approved', 'Product moderation status updated');
+  console.log('✓ Product moderation lifecycle operates accurately');
+
   console.log('\n========================================');
-  console.log('ALL BACKEND AUTOMATED TESTS PASSED! (10/10)');
+  console.log('ALL BACKEND AUTOMATED TESTS PASSED! (13/13)');
   console.log('========================================\n');
 }
 

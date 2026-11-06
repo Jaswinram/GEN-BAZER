@@ -21,6 +21,7 @@ import {
   Layers,
   Check,
   AlertCircle,
+  Pencil,
 } from 'lucide-react';
 import api from '../../services/api';
 import { Product, Order } from '../../types';
@@ -58,6 +59,18 @@ export const FarmerDashboard: React.FC = () => {
   const [imageUrl, setImageUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Edit Product Modal State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editPrice, setEditPrice] = useState<number | ''>('');
+  const [editPriceUnit, setEditPriceUnit] = useState('kg');
+  const [editAvailableQuantity, setEditAvailableQuantity] = useState<number | ''>('');
+  const [editQuantityUnit, setEditQuantityUnit] = useState('kg');
+  const [editMinOrderQuantity, setEditMinOrderQuantity] = useState(1);
+  const [editDescription, setEditDescription] = useState('');
 
   const fetchData = async () => {
     try {
@@ -131,6 +144,49 @@ export const FarmerDashboard: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to update status:', err);
+    }
+  };
+
+  const openEditModal = (p: Product) => {
+    setEditingProductId(p._id);
+    setEditName(p.name);
+    setEditCategory(p.category);
+    setEditPrice(p.price);
+    setEditPriceUnit(p.priceUnit);
+    setEditAvailableQuantity(p.availableQuantity);
+    setEditQuantityUnit(p.quantityUnit);
+    setEditMinOrderQuantity(p.minOrderQuantity || 1);
+    setEditDescription(p.description);
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProductId) return;
+    setSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await api.put(`/products/${editingProductId}`, {
+        name: editName,
+        category: editCategory,
+        price: Number(editPrice),
+        priceUnit: editPriceUnit,
+        availableQuantity: Number(editAvailableQuantity),
+        quantityUnit: editQuantityUnit,
+        minOrderQuantity: Number(editMinOrderQuantity),
+        description: editDescription,
+      });
+
+      if (res.data?.success) {
+        setProducts(products.map((p) => (p._id === editingProductId ? res.data.product : p)));
+        setEditModalOpen(false);
+        setEditingProductId(null);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.response?.data?.message || 'Failed to update produce listing.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -603,13 +659,22 @@ export const FarmerDashboard: React.FC = () => {
                       <span className="absolute top-2 left-2 text-[10px] font-bold text-emerald-900 bg-white/90 backdrop-blur-xs px-2.5 py-0.5 rounded-full shadow-xs">
                         {p.category}
                       </span>
-                      <button
-                        onClick={() => handleDeleteProduct(p._id)}
-                        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-rose-50 text-stone-600 hover:text-rose-600 rounded-lg shadow-xs transition-colors"
-                        title="Delete listing"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditModal(p)}
+                          className="p-1.5 bg-white/90 hover:bg-emerald-50 text-stone-600 hover:text-emerald-700 rounded-lg shadow-xs transition-colors"
+                          title="Edit listing"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(p._id)}
+                          className="p-1.5 bg-white/90 hover:bg-rose-50 text-stone-600 hover:text-rose-600 rounded-lg shadow-xs transition-colors"
+                          title="Delete listing"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="p-4 space-y-2">
@@ -996,6 +1061,117 @@ export const FarmerDashboard: React.FC = () => {
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-xs"
           >
             {submitting ? 'Listing Produce...' : 'Publish Produce to Marketplace'}
+          </button>
+        </form>
+      </Modal>
+
+      {/* ======================= EDIT PRODUCE MODAL ======================= */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Edit Produce Listing & Inventory"
+        maxWidth="lg"
+      >
+        <form onSubmit={handleUpdateProduct} className="space-y-4 text-xs">
+          {errorMsg && (
+            <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-stone-700 font-semibold mb-1">Produce / Crop Name</label>
+            <input
+              type="text"
+              required
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full p-2.5 border border-stone-200 rounded-xl bg-stone-50"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 p-3 bg-stone-50 rounded-2xl border border-stone-200">
+            <div>
+              <label className="block text-stone-700 font-semibold mb-1">Price (₹ / INR)</label>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  step="0.5"
+                  required
+                  min={0}
+                  value={editPrice}
+                  onChange={(e) => setEditPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full p-2 border border-stone-200 rounded-xl bg-white font-bold"
+                />
+                <select
+                  value={editPriceUnit}
+                  onChange={(e) => setEditPriceUnit(e.target.value)}
+                  className="p-2 border border-stone-200 rounded-xl bg-white"
+                >
+                  <option value="kg">/ kg</option>
+                  <option value="quintal">/ quintal</option>
+                  <option value="g">/ g</option>
+                  <option value="bag">/ bag</option>
+                  <option value="box">/ box</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-stone-700 font-semibold mb-1">Available Quantity / Stock</label>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={editAvailableQuantity}
+                  onChange={(e) => setEditAvailableQuantity(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full p-2 border border-stone-200 rounded-xl bg-white font-bold"
+                />
+                <select
+                  value={editQuantityUnit}
+                  onChange={(e) => setEditQuantityUnit(e.target.value)}
+                  className="p-2 border border-stone-200 rounded-xl bg-white"
+                >
+                  <option value="kg">kg</option>
+                  <option value="quintal">quintal</option>
+                  <option value="g">g</option>
+                  <option value="bag">bag</option>
+                  <option value="box">box</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-stone-700 font-semibold mb-1">Min. Order Quantity</label>
+            <input
+              type="number"
+              min={1}
+              value={editMinOrderQuantity}
+              onChange={(e) => setEditMinOrderQuantity(Number(e.target.value))}
+              className="w-full p-2.5 border border-stone-200 rounded-xl bg-stone-50"
+            />
+          </div>
+
+          <div>
+            <label className="block text-stone-700 font-semibold mb-1">Produce Description</label>
+            <textarea
+              rows={3}
+              required
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="w-full p-2.5 border border-stone-200 rounded-xl bg-stone-50"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors shadow-xs"
+          >
+            {submitting ? 'Saving Changes...' : 'Save Updated Produce'}
           </button>
         </form>
       </Modal>

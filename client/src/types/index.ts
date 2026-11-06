@@ -48,6 +48,8 @@ export interface Product {
   safetyInstructions?: string;
   stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
   isFeatured?: boolean;
+  moderationStatus?: 'approved' | 'pending_approval' | 'rejected';
+  moderationReason?: string;
   createdAt?: string;
 }
 

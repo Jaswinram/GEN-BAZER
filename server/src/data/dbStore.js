@@ -34,6 +34,25 @@ async function initStore() {
   memoryStore.machineryBookings = [...initial.machineryBookings];
   memoryStore.transportBookings = [...initial.transportBookings];
   memoryStore.reports = [...initial.reports];
+  if (initial.payments) {
+    memoryStore.payments = [...initial.payments];
+  } else {
+    memoryStore.payments = memoryStore.orders
+      .filter((o) => o.paymentStatus === 'successful')
+      .map((o) => ({
+        _id: 'pay_' + o._id,
+        paymentReference: o.paymentReference || ('PAY_GB_' + o.orderReference),
+        orderId: o._id,
+        userId: o.buyerId,
+        amount: o.totalAmount,
+        currency: 'INR',
+        status: o.paymentStatus,
+        gateway: 'mock_development_gateway',
+        mode: 'escrow_direct_settlement',
+        createdAt: o.createdAt || new Date(),
+        updatedAt: o.updatedAt || new Date(),
+      }));
+  }
   memoryStore.isInitialized = true;
   console.log('[Gen Baazar DB] In-Memory / Hybrid store initialized with standard seed data.');
 }
@@ -248,6 +267,16 @@ const db = {
       };
       return memoryStore.machinery[index];
     },
+    async findByIdAndDelete(id) {
+      await initStore();
+      if (isMongoConnected()) {
+        return await mongoose.model('MachineryListing').findByIdAndDelete(id);
+      }
+      const index = memoryStore.machinery.findIndex((item) => String(item._id) === String(id));
+      if (index === -1) return null;
+      const removed = memoryStore.machinery.splice(index, 1);
+      return removed[0];
+    },
     async countDocuments(filter = {}) {
       const list = await this.find(filter);
       return list.length;
@@ -358,6 +387,16 @@ const db = {
         updatedAt: new Date(),
       };
       return memoryStore.transport[index];
+    },
+    async findByIdAndDelete(id) {
+      await initStore();
+      if (isMongoConnected()) {
+        return await mongoose.model('TransportListing').findByIdAndDelete(id);
+      }
+      const index = memoryStore.transport.findIndex((item) => String(item._id) === String(id));
+      if (index === -1) return null;
+      const removed = memoryStore.transport.splice(index, 1);
+      return removed[0];
     },
     async countDocuments(filter = {}) {
       const list = await this.find(filter);
@@ -490,6 +529,18 @@ const db = {
 
   // Payments
   payments: {
+    async find(filter = {}) {
+      await initStore();
+      if (isMongoConnected()) {
+        return await mongoose.model('Payment').find(filter).sort({ createdAt: -1 });
+      }
+      return memoryStore.payments.filter((item) => {
+        for (const key of Object.keys(filter)) {
+          if (String(item[key]) !== String(filter[key])) return false;
+        }
+        return true;
+      });
+    },
     async create(data) {
       await initStore();
       if (isMongoConnected()) {

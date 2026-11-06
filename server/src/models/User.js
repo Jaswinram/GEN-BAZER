@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'suspended'],
       default: 'active',
     },
+    requirePasswordChange: {
+      type: Boolean,
+      default: false,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    passwordChangedAt: {
+      type: Date,
+    },
     bio: {
       type: String,
       default: '',
@@ -71,4 +81,3 @@ userSchema.methods.toJSON = function () {
 };
 
 module.exports = mongoose.model('User', userSchema);
-
