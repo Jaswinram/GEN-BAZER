@@ -194,6 +194,66 @@ const submitReport = async (req, res, next) => {
   }
 };
 
+// @desc    Get all marketplace products for admin moderation
+// @route   GET /api/admin/products
+// @access  Private (Admin only)
+const getAllProducts = async (req, res, next) => {
+  try {
+    const products = await db.products.find({});
+    res.status(200).json({ success: true, count: products.length, products });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all platform orders for admin oversight
+// @route   GET /api/admin/orders
+// @access  Private (Admin only)
+const getAllOrders = async (req, res, next) => {
+  try {
+    const orders = await db.orders.find({});
+    res.status(200).json({ success: true, count: orders.length, orders });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all machinery listings for admin inspection
+// @route   GET /api/admin/machinery
+// @access  Private (Admin only)
+const getAllMachinery = async (req, res, next) => {
+  try {
+    const machinery = await db.machinery.find({});
+    res.status(200).json({ success: true, count: machinery.length, machinery });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all transport listings for admin inspection
+// @route   GET /api/admin/transport
+// @access  Private (Admin only)
+const getAllTransport = async (req, res, next) => {
+  try {
+    const transport = await db.transport.find({});
+    res.status(200).json({ success: true, count: transport.length, transport });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all payment records for admin financial audits
+// @route   GET /api/admin/payments
+// @access  Private (Admin only)
+const getAllPayments = async (req, res, next) => {
+  try {
+    const payments = await db.payments.find({});
+    res.status(200).json({ success: true, count: payments.length, payments });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPlatformStats,
   getAllUsers,
@@ -201,5 +261,10 @@ module.exports = {
   getReports,
   updateReport,
   submitReport,
+  getAllProducts,
+  getAllOrders,
+  getAllMachinery,
+  getAllTransport,
+  getAllPayments,
 };
 

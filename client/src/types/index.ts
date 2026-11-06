@@ -274,6 +274,21 @@ export interface MarketPrice {
   isVerified: boolean;
 }
 
+export interface Payment {
+  _id: string;
+  paymentReference: string;
+  orderId: string;
+  userId: string;
+  amount: number;
+  currency: 'INR';
+  status: 'unpaid' | 'pending' | 'successful' | 'failed' | 'refunded';
+  gateway: string;
+  mode: string;
+  gatewayPaymentId?: string;
+  metadata?: any;
+  createdAt?: string;
+}
+
 export interface PlatformReport {
   _id: string;
   reporterId: string;
